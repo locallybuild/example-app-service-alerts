@@ -12,7 +12,9 @@ o888ooooood8 `Y8bod8P' `Y8bod8P' `Y888""8o o888o o888o     .8'
 
 # Example: Fire an Azure Monitor alert from an App Service app within Locally
 
-This example shows an alert going off end to end on [Locally Build](https://locally.build). An app running on App Service sends its telemetry to **Application Insights**. A **log search alert rule** counts its failed requests, and once there are too many, an **Action Group** posts the alert to a webhook on a second app that lists the alerts it receives.
+This example shows how to fire an Azure Monitor alert end to end, from an app running on App Service through to a webhook that receives it, on [Locally Build](https://locally.build).
+
+The app sends its telemetry to **Application Insights**. A **log search alert rule** counts its failed requests, and once there are too many, an **Action Group** posts the alert to a webhook on a second app that lists the alerts it receives.
 
 ```
  app (App Service)
@@ -62,20 +64,20 @@ The app has a **user-assigned managed identity** with that role on the Applicati
 * [Locally Build](https://locally.build).
 * Either [HashiCorp Terraform](https://terraform.io) or [OpenTofu](https://opentofu.org).
 * Either [Docker](https://www.docker.com) or [Podman](https://podman.io) (recommended).
+* The Locally Plugin for `Microsoft.ContainerRegistry` installed (`locally plugin install --name Microsoft.ContainerRegistry`).
 * The Locally Plugin for `Microsoft.Insights` installed (`locally plugin install --name Microsoft.Insights`).
 * The Locally Plugin for `Microsoft.OperationalInsights` installed (`locally plugin install --name Microsoft.OperationalInsights`).
 * The Locally Plugin for `Microsoft.Web` installed (`locally plugin install --name Microsoft.Web`).
-* The Locally Plugin for `Microsoft.ContainerRegistry` installed (`locally plugin install --name Microsoft.ContainerRegistry`).
 
 ## Running the example
 
-First, make sure your container runtime (Docker or Podman) is running, then start Locally:
+First up, we need to ensure our container runtime (Docker or Podman) is running, then launch Locally:
 
 ```bash
 locally build
 ```
 
-With Locally running, open another terminal and initialise Terraform. This downloads the providers and sets up the module:
+With Locally running, in another terminal we can initialise Terraform, which both downloads the providers we need and configures the module for use:
 
 ```bash
 cd environments/locally
@@ -83,17 +85,17 @@ terraform init
 ```
 
 > [!NOTE]
-> You can use OpenTofu instead by running `tofu` wherever this says `terraform`.
+> It's possible to use OpenTofu here by substituting `terraform` for `tofu`.
 
-Once Terraform is initialised, provision the example:
+With Terraform initialised, we can then provision the example by running:
 
 ```bash
 locally run terraform apply
 ```
 
-During the apply, Terraform builds the app with `docker build` and pushes it to the Container Registry, so the `docker` command needs to be available. With Podman, the `podman-docker` shim or a `docker` alias works.
+As part of the apply, the app is built with `docker build` and pushed into the Container Registry, so the `docker` command needs to be available (with Podman, the `podman-docker` shim or a `docker` alias works).
 
-After you approve the plan and the resources are deployed, both apps are running at the URLs in the outputs:
+Once you approve the plan and the resources have been deployed, both apps are running at the URLs in the outputs:
 
 ```
 app_url      = "https://locally-example-alerts-app.furnace.locally:5663"
@@ -104,7 +106,7 @@ receiver_url = "https://locally-example-alerts-receiver.furnace.locally:5663"
 
 ---
 
-You can also see the failed requests the alert rule counts. Query them in [the Monitoring section of the Locally Dashboard](https://localhost:5678/monitoring/components), or from the CLI with the workspace ID from the outputs:
+We can also see the failed requests the alert rule counts. Query them within [the Locally Dashboard, in the Monitoring section](https://localhost:5678/monitoring/components), or from the CLI with the workspace ID from the outputs:
 
 ```
 AppRequests | where Success == false | order by TimeGenerated desc
