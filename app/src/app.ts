@@ -3,7 +3,7 @@ import { telemetry } from "./telemetry";
 
 import { randomUUID } from "node:crypto";
 import express, { Request, Response } from "express";
-import { errorHandler, escapeHtml, handle, renderPage } from "./web";
+import { errorHandler, escapeHtml, renderPage } from "./web";
 
 const MAX_ERRORS = 100;
 
@@ -44,8 +44,9 @@ export async function runApp(port: number): Promise<void> {
 
   // The button calls /fail the requested number of times, over HTTP, so each
   // call is a real failed request rather than a hand-written telemetry item.
-  app.post("/errors", handle(async (req, res) => {
-    const count = Math.min(Math.max(Math.trunc(Number(req.body.count)) || 1, 1), MAX_ERRORS);
+  // Express 5 passes a rejected promise to the error handler itself.
+  app.post("/errors", async (req: Request, res: Response) => {
+    const count = Math.min(Math.max(Math.trunc(Number(req.body?.count)) || 1, 1), MAX_ERRORS);
     const batch = randomUUID();
     await Promise.all(
       Array.from({ length: count }, () =>
@@ -57,7 +58,7 @@ export async function runApp(port: number): Promise<void> {
     await telemetry.flush();
     console.log(`made ${count} failed requests in batch ${batch}`);
     res.redirect(303, `/?generated=${count}&batch=${encodeURIComponent(batch)}`);
-  }));
+  });
 
   app.use(errorHandler);
 

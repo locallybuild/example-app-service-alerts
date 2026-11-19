@@ -48,13 +48,6 @@ ${body}
 </html>`;
 }
 
-// Express 4 doesn't forward rejected promises from async handlers, so route
-// any error to the error handler.
-type AsyncHandler = (req: Request, res: Response) => Promise<void>;
-export const handle = (fn: AsyncHandler) => (req: Request, res: Response, next: NextFunction) => {
-  fn(req, res).catch(next);
-};
-
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   console.error(err);
   res.status(500).send("Internal Server Error");
